@@ -212,6 +212,14 @@ Configurar `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` como variables de ento
 
 ---
 
+---
+
+## Licencia
+
+Distribuido bajo la licencia MIT. Consulta el archivo [`LICENSE`](./LICENSE) para mas detalles.
+
 <div align="center">
-<sub>Proyecto personal — uso privado. No disponible para redistribucion sin autorizacion.</sub>
+<img src="https://img.shields.io/badge/Licencia-MIT-16a34a?style=flat-square" alt="Licencia MIT"/>
+&nbsp;
+<img src="https://img.shields.io/badge/Autor-LeonardSF-15803d?style=flat-square" alt="LeonardSF"/>
 </div>
