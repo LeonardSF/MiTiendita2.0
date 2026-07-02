@@ -7,3 +7,58 @@
     @apply bg-gray-50 text-gray-900 antialiased;
   }
 }
+
+@layer utilities {
+  /* Modal overlay — fade in */
+  @keyframes overlay-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  /* Modal card — scale + fade in */
+  @keyframes modal-in {
+    from { opacity: 0; transform: scale(0.85) translateY(12px); }
+    to   { opacity: 1; transform: scale(1)    translateY(0); }
+  }
+
+  /* Check circle draw */
+  @keyframes check-draw {
+    from { stroke-dashoffset: 60; }
+    to   { stroke-dashoffset: 0; }
+  }
+
+  /* Circle scale pop */
+  @keyframes circle-pop {
+    0%   { transform: scale(0.4); opacity: 0; }
+    60%  { transform: scale(1.15); opacity: 1; }
+    100% { transform: scale(1); }
+  }
+
+  /* Slide up + fade for each data row */
+  @keyframes row-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Progress bar shrink */
+  @keyframes bar-shrink {
+    from { width: 100%; }
+    to   { width: 0%; }
+  }
+
+  .animate-overlay-in   { animation: overlay-in  0.2s ease-out forwards; }
+  .animate-modal-in     { animation: modal-in    0.25s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+  .animate-circle-pop   { animation: circle-pop  0.4s cubic-bezier(0.34,1.56,0.64,1) 0.1s both; }
+  .animate-check-draw   { animation: check-draw  0.4s ease-out 0.35s both; }
+  .animate-row-in       { animation: row-in      0.3s ease-out both; }
+  .animate-bar-shrink   { animation: bar-shrink  3s linear forwards; }
+}
+
+/* Ocultar scrollbar manteniendo el scroll funcional */
+.scrollbar-none {
+  scrollbar-width: none;       /* Firefox */
+  -ms-overflow-style: none;    /* IE / Edge */
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;               /* Chrome / Safari */
+}

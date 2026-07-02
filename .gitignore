@@ -1,22 +1,39 @@
 # dependencies
 node_modules/
 
-# build
+# build output
 dist/
+dist-ssr/
 
-# env
+# environment variables
 .env
 .env.local
 .env.*.local
 
-# editor
+# editor config
 .vscode/
 .idea/
 
-# OS
+# Kiro IDE
+.kiro/
+
+# OS generated
 .DS_Store
 Thumbs.db
 
 # logs
 *.log
 npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Vite cache
+.vite/
+
+# internal docs (not for public repo)
+*.md
+!README.md
