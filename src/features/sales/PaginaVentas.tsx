@@ -145,6 +145,8 @@ interface ResumenVenta {
   monto:     number
   cambio:    number
   productos: number
+  fecha:     string
+  hora:      string
 }
 
 interface PropiedadesModalResumen {
@@ -198,6 +200,8 @@ function ModalResumenVenta({ resumen }: PropiedadesModalResumen) {
               { label: 'Total cobrado',   valor: formatearMoneda(resumen.total),    delay: '0.5s', bold: true },
               { label: 'Monto recibido',  valor: formatearMoneda(resumen.monto),    delay: '0.6s', bold: false },
               { label: 'Productos',       valor: `${resumen.productos}`,            delay: '0.7s', bold: false },
+              { label: 'Fecha',           valor: resumen.fecha,                     delay: '0.8s', bold: false },
+              { label: 'Hora',            valor: resumen.hora,                      delay: '0.9s', bold: false },
             ].map(({ label, valor, delay, bold }) => (
               <li key={label}
                   className="flex justify-between items-center px-4 py-2.5 bg-gray-50 animate-row-in"
@@ -368,6 +372,9 @@ export function PaginaVentas() {
     const total    = ventaActual?.total   ?? 0
     const cambio   = Math.round((monto - total) * 100) / 100
     const numProds = detalles.length
+    const ahora    = new Date()
+    const fechaRes = ahora.toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' })
+    const horaRes  = ahora.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
 
     const res = await cobrarVenta(monto)
     if (!res.ok) return
@@ -376,7 +383,7 @@ export function PaginaVentas() {
     setModalCobro(false)
 
     // Mostrar modal con resumen — se cierra a los 3s o manualmente
-    const resumen: ResumenVenta = { folio, total, monto, cambio, productos: numProds }
+    const resumen: ResumenVenta = { folio, total, monto, cambio, productos: numProds, fecha: fechaRes, hora: horaRes }
     setResumenVenta(resumen)
     setTimeout(() => {
       setResumenVenta(null)
@@ -407,11 +414,6 @@ export function PaginaVentas() {
     }
     return () => setInfoFooter(null)
   }, [total, detalles.length, setInfoFooter])
-
-  // Fecha local legible
-  const fechaHoy = new Date().toLocaleDateString('es-MX', {
-    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
-  })
 
   return (
     <div className="mx-auto max-w-4xl space-y-4">
@@ -463,12 +465,15 @@ export function PaginaVentas() {
         <div className="bg-primary-600 px-6 py-5 text-center">
           <h1 className="text-base font-bold uppercase tracking-widest text-white">
             Registro de venta
+
+            {/* id de venta
+            {ventaActual?.folio && (
+              <span className="ml-3 font-mono text-xs font-normal text-primary-200 normal-case tracking-normal">
+                {ventaActual.folio}
+              </span>
+            )}
+              */}
           </h1>
-          {ventaActual?.folio && (
-            <p className="mt-1 font-mono text-xs text-primary-200 tracking-normal">
-              {ventaActual.folio}
-            </p>
-          )}
         </div>
 
         {/* ── Sección superior: buscador + lista compacta de resultados ── */}
@@ -644,27 +649,8 @@ export function PaginaVentas() {
           </table>
         </div>
 
-        {/* ── Pie: fecha, cajero, hora y botones ── */}
+        {/* ── Pie: fecha, total y botones ── */}
         <div className="border-t border-gray-200 px-5 py-4 space-y-3">
-          {/* Metadatos de la venta */}
-          <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-1">
-            <p className="text-xs text-gray-400 capitalize">{fechaHoy}</p>
-            <div className="flex items-center gap-4 text-xs text-gray-400">
-              {perfil?.nombre && (
-                <span>
-                  <span className="font-semibold text-gray-500">Cajero:</span>{' '}
-                  {perfil.nombre}
-                </span>
-              )}
-              {ventaActual?.hora_inicio && (
-                <span>
-                  <span className="font-semibold text-gray-500">Hora inicio:</span>{' '}
-                  {ventaActual.hora_inicio.slice(0, 5)}
-                </span>
-              )}
-            </div>
-          </div>
-
           {/* Total */}
           <div className="flex items-center justify-between">
             <p className="text-xl font-bold text-gray-900">
