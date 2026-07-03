@@ -13,7 +13,7 @@
 // =============================================================================
 
 import { useState, useEffect } from 'react'
-import { NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import {
   ShoppingBag,
   ShoppingCart,
@@ -134,6 +134,26 @@ function LayoutAppInner() {
   const { perfil, cerrarSesion } = useAuth()
 
   const esAdmin = perfil?.rol === 'admin'
+  const location = useLocation()
+  const navigate = useNavigate()
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768)
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  useEffect(() => {
+    if (isMobile && esAdmin) {
+      const rutasProhibidas = ['/ventas', '/corte-caja']
+      if (rutasProhibidas.includes(location.pathname)) {
+        navigate('/productos', { replace: true })
+      }
+    }
+  }, [isMobile, esAdmin, location.pathname, navigate])
 
   // Elementos visibles según rol
   const elementosVisibles = elementosNav.filter(
