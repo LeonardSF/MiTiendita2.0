@@ -213,13 +213,13 @@ export function PaginaReportes() {
 
   // ---------------------------------------------------------------------------
   // Datos para la gráfica de pastel
-  // Muestra: Ganancias | Costo (ventas − ganancias)
+  // Muestra: Ganancias | Ventas
   // Si no hay datos muestra un sector gris de "Sin datos"
   // ---------------------------------------------------------------------------
   const datosGrafica = datos && datos.ventas_totales > 0
     ? [
         { name: 'Ganancias', value: Math.max(datos.ganancias, 0) },
-        { name: 'Costos',    value: Math.max(datos.ventas_totales - datos.ganancias, 0) },
+        { name: 'Ventas',    value: Math.max(datos.ventas_totales, 0) },
       ]
     : [{ name: 'Sin datos', value: 1 }]
 
@@ -399,9 +399,9 @@ export function PaginaReportes() {
                           className="inline-block h-2.5 w-2.5 rounded-full mr-1.5"
                           style={{ backgroundColor: COLORES_GRAFICA.ventas }}
                         />
-                        <span className="text-xs text-gray-500">Costos</span>
+                        <span className="text-xs text-gray-500">Ventas</span>
                         <p className="text-base font-bold text-primary-700 mt-1">
-                          {formatearMoneda(Math.max(datos.ventas_totales - datos.ganancias, 0))}
+                          {formatearMoneda(datos.ventas_totales)}
                         </p>
                       </div>
                     </div>

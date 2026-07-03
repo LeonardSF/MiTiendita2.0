@@ -346,7 +346,7 @@ function ModalEliminarProducto({ producto, cargando, onConfirmar, onCancelar }: 
           <p className="mb-4 text-sm text-gray-500">¿Confirmas que deseas eliminar este producto?</p>
           <ul className="rounded-xl border border-gray-100 bg-gray-50 divide-y divide-gray-100 text-sm overflow-hidden">
             <li className="flex justify-between px-4 py-2.5">
-              <span className="text-gray-500">descripción</span>
+              <span className="text-gray-500">Nombre</span>
               <span className="font-semibold text-gray-800">{producto.nombre}</span>
             </li>
             <li className="flex justify-between px-4 py-2.5">
@@ -388,7 +388,7 @@ function ModalAlertasStock({ alertas, cargando, onCerrar }: PropiedadesModalAler
           <div className="flex items-center gap-2">
             <Bell className="h-4 w-4 text-white" aria-hidden="true" />
             <h2 className="text-sm font-bold uppercase tracking-widest text-white">
-              Alertas de inventario
+              Alerta de inventario
             </h2>
           </div>
           <button
@@ -416,41 +416,15 @@ function ModalAlertasStock({ alertas, cargando, onCerrar }: PropiedadesModalAler
               </p>
             </div>
           ) : (
-            <ul className="divide-y divide-gray-100">
-              {alertas.map((a) => {
-                const diferencia = a.producto.existencia - a.producto.minimo_existencia
-                return (
-                  <li key={a.id} className="flex items-start justify-between gap-4 px-6 py-4">
-                    <div className="flex items-start gap-3 min-w-0">
-                      {/* Indicador visual de urgencia */}
-                      <span className={[
-                        'mt-0.5 flex h-2 w-2 shrink-0 rounded-full',
-                        a.producto.existencia === 0 ? 'bg-red-600' : 'bg-amber-500',
-                      ].join(' ')} />
-                      <div className="min-w-0">
-                        <p className="text-sm font-semibold text-gray-900 truncate">{a.producto.nombre}</p>
-                        <p className="text-xs text-gray-400 font-mono">{a.producto.codigo}</p>
-                        <p className="text-xs text-gray-500 mt-0.5">{a.mensaje}</p>
-                      </div>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <p className={[
-                        'text-sm font-bold',
-                        a.producto.existencia === 0 ? 'text-red-600' : 'text-amber-600',
-                      ].join(' ')}>
-                        {a.producto.existencia} uds.
-                      </p>
-                      <p className="text-xs text-gray-400">Mín: {a.producto.minimo_existencia}</p>
-                      <p className={[
-                        'text-xs font-medium mt-0.5',
-                        diferencia < 0 ? 'text-red-500' : 'text-gray-400',
-                      ].join(' ')}>
-                        {diferencia < 0 ? `${diferencia} uds.` : 'En límite'}
-                      </p>
-                    </div>
-                  </li>
-                )
-              })}
+            <ul className="divide-y divide-gray-200 bg-white">
+              {alertas.map((a) => (
+                <li key={a.id} className="px-6 py-4 bg-white text-black text-sm space-y-1">
+                  <div><span className="font-semibold text-black">Nombre:</span> <span className="text-black">{a.producto.nombre}</span></div>
+                  <div><span className="font-semibold text-black">Código:</span> <span className="text-black">{a.producto.codigo}</span></div>
+                  <div><span className="font-semibold text-black">Existencia actual:</span> <span className="text-black">{a.producto.existencia}</span></div>
+                  <div><span className="font-semibold text-black">Cantidad mínima:</span> <span className="text-black">{a.producto.minimo_existencia}</span></div>
+                </li>
+              ))}
             </ul>
           )}
         </div>
@@ -467,7 +441,7 @@ function ModalAlertasStock({ alertas, cargando, onCerrar }: PropiedadesModalAler
             onClick={onCerrar}
             className={alertas.length === 0 ? 'w-full' : ''}
           >
-            Cerrar
+            Aceptar
           </Boton>
         </div>
 
@@ -775,7 +749,7 @@ export function PaginaProductos() {
 
               {/* ── VISTA ESCRITORIO: tabla (F.3) ── */}
               <div className="hidden md:block rounded-xl border border-gray-200 overflow-hidden">
-                <div className="max-h-[450px] overflow-y-auto">
+                <div className="max-h-[491px] overflow-y-auto">
                   <table className="min-w-full divide-y divide-gray-100 text-sm">
                     <thead className="sticky top-0 z-10">
                       <tr className="bg-gray-50">

@@ -8,7 +8,7 @@
 
 import { useState, useCallback, useEffect } from 'react'
 import {
-  Scissors, CalendarDays, Clock, TrendingUp, Wallet,
+  Scissors, CalendarDays, Clock,
   ShoppingCart, CheckCircle2, X, AlertCircle, User, Mail,
 } from 'lucide-react'
 import { supabase } from '@/shared/lib/clienteSupabase'
@@ -73,6 +73,7 @@ interface PropiedadesModalConfirmar {
 }
 
 function ModalConfirmarCorte({ tipo, resultado, horaInicio, horaFin, cargando, onConfirmar, onCancelar }: PropiedadesModalConfirmar) {
+  const { perfil } = useAuth()
   const esDia = tipo === 'dia'
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={onCancelar}>
@@ -84,24 +85,57 @@ function ModalConfirmarCorte({ tipo, resultado, horaInicio, horaFin, cargando, o
         </div>
         <div className="px-6 pt-5 pb-2 space-y-3">
           <p className="text-sm text-gray-500 text-center">¿Confirmas guardar este corte? Esta acción no se puede deshacer.</p>
-          <ul className="rounded-xl border border-gray-100 bg-gray-50 divide-y divide-gray-100 overflow-hidden text-sm">
-            <li className="flex justify-between px-4 py-2.5">
-              <span className="text-gray-500">Tipo</span>
-              <span className="font-semibold text-gray-800">{esDia ? 'Cierre del día' : 'Turno de cajero'}</span>
-            </li>
-            <li className="flex justify-between px-4 py-2.5">
-              <span className="text-gray-500">Período</span>
-              <span className="font-mono text-gray-700">{formatearHora(horaInicio)} → {formatearHora(horaFin)}</span>
-            </li>
-            <li className="flex justify-between px-4 py-2.5">
-              <span className="text-gray-500">Ventas totales</span>
-              <span className="font-bold text-primary-700">{formatearMoneda(resultado.total_ventas)}</span>
-            </li>
-            <li className="flex justify-between px-4 py-2.5">
-              <span className="text-gray-500">Núm. ventas</span>
-              <span className="font-semibold text-gray-800">{resultado.numero_ventas}</span>
-            </li>
-          </ul>
+          {esDia ? (
+            <ul className="rounded-xl border border-gray-100 bg-gray-50 divide-y divide-gray-100 overflow-hidden text-sm">
+              <li className="flex justify-between px-4 py-2.5">
+                <span className="text-gray-500">Fecha</span>
+                <span className="font-semibold text-gray-800">{fechaHoyLegible()}</span>
+              </li>
+              <li className="flex justify-between px-4 py-2.5">
+                <span className="text-gray-500">Ventas totales</span>
+                <span className="font-bold text-primary-700">{formatearMoneda(resultado.total_ventas)}</span>
+              </li>
+              <li className="flex justify-between px-4 py-2.5">
+                <span className="text-gray-500">Ganancias</span>
+                <span className="font-semibold text-green-700">{formatearMoneda(resultado.ganancia_estimada)}</span>
+              </li>
+              <li className="flex justify-between px-4 py-2.5">
+                <span className="text-gray-500">Efectivo disponible en caja</span>
+                <span className="font-semibold text-amber-700">{formatearMoneda(resultado.efectivo_esperado)}</span>
+              </li>
+              <li className="flex justify-between px-4 py-2.5">
+                <span className="text-gray-500">Número de ventas realizadas</span>
+                <span className="font-semibold text-gray-800">{resultado.numero_ventas}</span>
+              </li>
+            </ul>
+          ) : (
+            <ul className="rounded-xl border border-gray-100 bg-gray-50 divide-y divide-gray-100 overflow-hidden text-sm">
+              <li className="flex justify-between px-4 py-2.5">
+                <span className="text-gray-500">Correo</span>
+                <span className="font-semibold text-gray-800">{perfil?.email ?? '—'}</span>
+              </li>
+              <li className="flex justify-between px-4 py-2.5">
+                <span className="text-gray-500">Fecha</span>
+                <span className="font-semibold text-gray-800">{fechaHoyLegible()}</span>
+              </li>
+              <li className="flex justify-between px-4 py-2.5">
+                <span className="text-gray-500">Hora de inicio/fin</span>
+                <span className="font-mono text-gray-700">{formatearHora(horaInicio)} → {formatearHora(horaFin)}</span>
+              </li>
+              <li className="flex justify-between px-4 py-2.5">
+                <span className="text-gray-500">Ventas totales</span>
+                <span className="font-bold text-primary-700">{formatearMoneda(resultado.total_ventas)}</span>
+              </li>
+              <li className="flex justify-between px-4 py-2.5">
+                <span className="text-gray-500">Ganancias</span>
+                <span className="font-semibold text-green-700">{formatearMoneda(resultado.ganancia_estimada)}</span>
+              </li>
+              <li className="flex justify-between px-4 py-2.5">
+                <span className="text-gray-500">Dinero registrado en caja</span>
+                <span className="font-semibold text-amber-700">{formatearMoneda(resultado.efectivo_esperado)}</span>
+              </li>
+            </ul>
+          )}
         </div>
         <div className="px-6 pb-6 flex gap-3 mt-2">
           <Boton variante="secundario" className="flex-1" onClick={onCancelar} disabled={cargando}>Cancelar</Boton>
@@ -112,32 +146,7 @@ function ModalConfirmarCorte({ tipo, resultado, horaInicio, horaFin, cargando, o
   )
 }
 
-// =============================================================================
-// Tarjeta de métrica
-// =============================================================================
-interface PropiedadesTarjeta {
-  icono: React.ReactNode; etiqueta: string; valor: string
-  subvalor?: string; color?: 'primary' | 'green' | 'amber' | 'gray'
-}
 
-function TarjetaMetrica({ icono, etiqueta, valor, subvalor, color = 'primary' }: PropiedadesTarjeta) {
-  const col = {
-    primary: { c: 'bg-primary-50 border-primary-100', t: 'text-primary-700', i: 'text-primary-500' },
-    green:   { c: 'bg-green-50  border-green-100',  t: 'text-green-700',  i: 'text-green-500' },
-    amber:   { c: 'bg-amber-50  border-amber-100',  t: 'text-amber-700',  i: 'text-amber-500' },
-    gray:    { c: 'bg-gray-50   border-gray-200',   t: 'text-gray-700',   i: 'text-gray-400' },
-  }[color]
-  return (
-    <div className={`rounded-xl border px-5 py-4 flex items-center gap-4 ${col.c}`}>
-      <span className={`shrink-0 ${col.i}`}>{icono}</span>
-      <div className="min-w-0">
-        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-0.5">{etiqueta}</p>
-        <p className={`text-xl font-bold truncate ${col.t}`}>{valor}</p>
-        {subvalor && <p className="text-xs text-gray-400 mt-0.5">{subvalor}</p>}
-      </div>
-    </div>
-  )
-}
 
 // =============================================================================
 // Componente principal
@@ -357,7 +366,7 @@ export function PaginaCorteCaja() {
                 <div>
                   <p className="text-sm font-bold text-green-700">Corte guardado correctamente</p>
                   <p className="text-xs text-green-600 mt-0.5">
-                    Registrado el {fechaHoyLegible()} — {formatearHora(horaInicio)} → {formatearHora(horaFin)}
+                    Registrado por {perfil?.nombre} el {fechaHoyLegible()} — {formatearHora(horaInicio)} → {formatearHora(horaFin)}
                   </p>
                 </div>
               </div>
@@ -369,44 +378,59 @@ export function PaginaCorteCaja() {
                     Resumen del corte registrado
                   </p>
                 </div>
-                <ul className="divide-y divide-gray-100 text-sm">
-                  <li className="flex justify-between px-5 py-3">
-                    <span className="text-gray-500">Tipo de corte</span>
-                    <span className="font-semibold text-gray-800">{esDia ? 'Cierre del día' : 'Turno de cajero'}</span>
-                  </li>
-                  {!esDia && (
+                {esDia ? (
+                  <div className="p-6 bg-white flex justify-center border-b border-gray-100">
+                    <ul className="w-full max-w-sm space-y-4 text-center">
+                      <li className="pb-3 border-b border-gray-100">
+                        <span className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Fecha</span>
+                        <span className="text-base font-bold text-gray-800">{fechaHoyLegible()}</span>
+                      </li>
+                      <li className="pb-3 border-b border-gray-100">
+                        <span className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Ventas totales</span>
+                        <span className="text-2xl font-extrabold text-primary-700">{formatearMoneda(calculado.total_ventas)}</span>
+                      </li>
+                      <li className="pb-3 border-b border-gray-100">
+                        <span className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Ganancias</span>
+                        <span className="text-xl font-bold text-green-700">{formatearMoneda(calculado.ganancia_estimada)}</span>
+                      </li>
+                      <li className="pb-3 border-b border-gray-100">
+                        <span className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Efectivo disponible en caja</span>
+                        <span className="text-xl font-bold text-amber-700">{formatearMoneda(calculado.efectivo_esperado)}</span>
+                      </li>
+                      <li>
+                        <span className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Número de ventas realizadas</span>
+                        <span className="text-lg font-bold text-gray-800">{calculado.numero_ventas}</span>
+                      </li>
+                    </ul>
+                  </div>
+                ) : (
+                  <ul className="divide-y divide-gray-100 text-sm">
                     <li className="flex justify-between px-5 py-3">
-                      <span className="text-gray-500">Cajero</span>
-                      <span className="font-semibold text-gray-800">{perfil?.nombre}</span>
+                      <span className="text-gray-500">Correo</span>
+                      <span className="font-semibold text-gray-800">{perfil?.email ?? '—'}</span>
                     </li>
-                  )}
-                  <li className="flex justify-between px-5 py-3">
-                    <span className="text-gray-500">Período</span>
-                    <span className="font-mono text-gray-700">{formatearHora(horaInicio)} → {formatearHora(horaFin)}</span>
-                  </li>
-                  <li className="flex justify-between px-5 py-3">
-                    <span className="text-gray-500">{esDia ? 'Ventas totales del día' : 'Mis ventas del turno'}</span>
-                    <span className="font-bold text-primary-700">{formatearMoneda(calculado.total_ventas)}</span>
-                  </li>
-                  <li className="flex justify-between px-5 py-3">
-                    <span className="text-gray-500">{esDia ? 'Número de transacciones' : 'Ventas cobradas'}</span>
-                    <span className="font-semibold text-gray-800">{calculado.numero_ventas}</span>
-                  </li>
-                  <li className="flex justify-between px-5 py-3">
-                    <span className="text-gray-500">{esDia ? 'Ganancia total del día' : 'Mi ganancia estimada'}</span>
-                    <span className="font-semibold text-green-700">{formatearMoneda(calculado.ganancia_estimada)}</span>
-                  </li>
-                  <li className="flex justify-between px-5 py-3">
-                    <span className="text-gray-500">{esDia ? 'Efectivo esperado en caja' : 'Efectivo en mi caja'}</span>
-                    <span className="font-semibold text-amber-700">{formatearMoneda(calculado.efectivo_esperado)}</span>
-                  </li>
-                  {esDia && cajeros.length > 0 && (
                     <li className="flex justify-between px-5 py-3">
-                      <span className="text-gray-500">Cajeros con ventas</span>
-                      <span className="font-semibold text-gray-800">{cajeros.length}</span>
+                      <span className="text-gray-500">Fecha</span>
+                      <span className="font-semibold text-gray-800">{fechaHoyLegible()}</span>
                     </li>
-                  )}
-                </ul>
+                    <li className="flex justify-between px-5 py-3">
+                      <span className="text-gray-500">Hora de inicio/fin</span>
+                      <span className="font-mono text-gray-700">{formatearHora(horaInicio)} → {formatearHora(horaFin)}</span>
+                    </li>
+                    <li className="flex justify-between px-5 py-3">
+                      <span className="text-gray-500">Ventas totales</span>
+                      <span className="font-bold text-primary-700">{formatearMoneda(calculado.total_ventas)}</span>
+                    </li>
+                    <li className="flex justify-between px-5 py-3">
+                      <span className="text-gray-500">Ganancias</span>
+                      <span className="font-semibold text-green-700">{formatearMoneda(calculado.ganancia_estimada)}</span>
+                    </li>
+                    <li className="flex justify-between px-5 py-3">
+                      <span className="text-gray-500">Dinero registrado en caja</span>
+                      <span className="font-semibold text-amber-700">{formatearMoneda(calculado.efectivo_esperado)}</span>
+                    </li>
+                  </ul>
+                )}
               </div>
 
               {/* Botones para hacer otro corte */}
@@ -447,39 +471,68 @@ export function PaginaCorteCaja() {
                 </div>
               ) : (
                 <>
-                  {/* ── Corte de Caja: F.11 ── tarjetas enfocadas en el turno personal */}
+                  {/* ── Corte de Caja: F.11 ── listado exacto de campos */}
                   {!esDia && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <TarjetaMetrica icono={<ShoppingCart className="h-6 w-6" />}
-                        etiqueta="Mis ventas del turno" valor={formatearMoneda(calculado.total_ventas)}
-                        subvalor={`${calculado.numero_ventas} venta${calculado.numero_ventas !== 1 ? 's' : ''} cobrada${calculado.numero_ventas !== 1 ? 's' : ''}`}
-                        color="primary" />
-                      <TarjetaMetrica icono={<TrendingUp className="h-6 w-6" />}
-                        etiqueta="Mi ganancia estimada" valor={formatearMoneda(calculado.ganancia_estimada)}
-                        subvalor="Estimado según costos de productos" color="green" />
-                      <TarjetaMetrica icono={<Wallet className="h-6 w-6" />}
-                        etiqueta="Efectivo en mi caja" valor={formatearMoneda(calculado.efectivo_esperado)}
-                        subvalor="Suma de mis cobros del turno" color="amber" />
-                      <TarjetaMetrica icono={<Clock className="h-6 w-6" />}
-                        etiqueta="Duración del turno" valor={`${formatearHora(horaInicio)} → ${formatearHora(horaFin)}`}
-                        subvalor="Hora de inicio / hora de corte" color="gray" />
+                    <div className="flex justify-center">
+                      <div className="w-full max-w-md rounded-2xl border border-primary-200 bg-primary-50/30 p-6 shadow-sm">
+                        <ul className="space-y-4">
+                          <li className="flex justify-between items-center pb-2.5 border-b border-primary-100/40">
+                            <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">Correo</span>
+                            <span className="text-sm font-semibold text-gray-800">{perfil?.email ?? '—'}</span>
+                          </li>
+                          <li className="flex justify-between items-center pb-2.5 border-b border-primary-100/40">
+                            <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">Fecha</span>
+                            <span className="text-sm font-semibold text-gray-800">{fechaHoyLegible()}</span>
+                          </li>
+                          <li className="flex justify-between items-center pb-2.5 border-b border-primary-100/40">
+                            <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">Hora de inicio/fin</span>
+                            <span className="text-sm font-mono font-medium text-gray-700">{formatearHora(horaInicio)} → {formatearHora(horaFin)}</span>
+                          </li>
+                          <li className="flex justify-between items-center pb-2.5 border-b border-primary-100/40">
+                            <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">Ventas totales</span>
+                            <span className="text-lg font-bold text-primary-700">{formatearMoneda(calculado.total_ventas)}</span>
+                          </li>
+                          <li className="flex justify-between items-center pb-2.5 border-b border-primary-100/40">
+                            <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">Ganancias</span>
+                            <span className="text-lg font-semibold text-green-700">{formatearMoneda(calculado.ganancia_estimada)}</span>
+                          </li>
+                          <li className="flex justify-between items-center">
+                            <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">Dinero registrado en caja</span>
+                            <span className="text-lg font-semibold text-amber-700">{formatearMoneda(calculado.efectivo_esperado)}</span>
+                          </li>
+                        </ul>
+                      </div>
                     </div>
                   )}
 
-                  {/* ── CORTE DEL DÍA: F.12 ── tarjetas del total + desglose por cajero */}
+                  {/* ── CORTE DEL DÍA: F.12 ── listado centrado requerido + desglose por cajero */}
                   {esDia && (
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <TarjetaMetrica icono={<ShoppingCart className="h-6 w-6" />}
-                          etiqueta="Total del día" valor={formatearMoneda(calculado.total_ventas)}
-                          subvalor={`${calculado.numero_ventas} venta${calculado.numero_ventas !== 1 ? 's' : ''} en total`}
-                          color="primary" />
-                        <TarjetaMetrica icono={<TrendingUp className="h-6 w-6" />}
-                          etiqueta="Ganancia total del día" valor={formatearMoneda(calculado.ganancia_estimada)}
-                          color="green" />
-                        <TarjetaMetrica icono={<Wallet className="h-6 w-6" />}
-                          etiqueta="Efectivo esperado en caja" valor={formatearMoneda(calculado.efectivo_esperado)}
-                          subvalor="Suma de todos los cobros del día" color="amber" />
+                    <div className="space-y-6">
+                      <div className="flex justify-center">
+                        <div className="w-full max-w-md rounded-2xl border border-amber-200 bg-amber-50/50 p-6 shadow-sm">
+                          <ul className="space-y-4 text-center">
+                            <li className="pb-3 border-b border-amber-100/70">
+                              <span className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Fecha</span>
+                              <span className="text-base font-bold text-gray-800">{fechaHoyLegible()}</span>
+                            </li>
+                            <li className="pb-3 border-b border-amber-100/70">
+                              <span className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Ventas totales</span>
+                              <span className="text-2xl font-extrabold text-primary-700">{formatearMoneda(calculado.total_ventas)}</span>
+                            </li>
+                            <li className="pb-3 border-b border-amber-100/70">
+                              <span className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Ganancias</span>
+                              <span className="text-xl font-bold text-green-700">{formatearMoneda(calculado.ganancia_estimada)}</span>
+                            </li>
+                            <li className="pb-3 border-b border-amber-100/70">
+                              <span className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Efectivo disponible en caja</span>
+                              <span className="text-xl font-bold text-amber-700">{formatearMoneda(calculado.efectivo_esperado)}</span>
+                            </li>
+                            <li>
+                              <span className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Número de ventas realizadas</span>
+                              <span className="text-lg font-bold text-gray-800">{calculado.numero_ventas}</span>
+                            </li>
+                          </ul>
+                        </div>
                       </div>
 
                       {/* Desglose por cajero */}

@@ -521,7 +521,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trg_generar_alerta_stock
-  AFTER UPDATE OF existencia ON productos
+  AFTER INSERT OR UPDATE ON productos
   FOR EACH ROW
   EXECUTE FUNCTION fn_generar_alerta_stock();
 
@@ -547,7 +547,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trg_resolver_alerta_stock
-  AFTER UPDATE OF existencia ON productos
+  AFTER INSERT OR UPDATE ON productos
   FOR EACH ROW
   EXECUTE FUNCTION fn_resolver_alerta_stock();
 

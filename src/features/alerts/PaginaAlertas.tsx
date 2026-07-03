@@ -40,41 +40,13 @@ function ModalAlertaInventario({ alertas, onCerrar }: PropiedadesModalAlerta) {
         </div>
 
         {/* Lista desplazable — F.14: fondo blanco, letras negras, barra lateral */}
-        <div className="max-h-80 overflow-y-auto divide-y divide-gray-100">
+        <div className="max-h-80 overflow-y-auto divide-y divide-gray-200 bg-white">
           {alertas.map((alerta) => (
-            <div key={alerta.id} className="px-6 py-4">
-              <div className="space-y-2">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-semibold text-gray-900">
-                      {alerta.producto.nombre}
-                    </p>
-                    <p className="text-xs font-mono text-gray-400 mt-0.5">
-                      {alerta.producto.codigo}
-                    </p>
-                  </div>
-                  <InsigniaStock
-                    estado={obtenerEstadoStock(
-                      alerta.producto.existencia,
-                      alerta.producto.minimo_existencia,
-                    )}
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="rounded-lg bg-red-50 px-3 py-2 text-center">
-                    <p className="text-xs text-gray-500">Existencia actual</p>
-                    <p className="text-lg font-bold text-red-600">
-                      {alerta.producto.existencia}
-                    </p>
-                  </div>
-                  <div className="rounded-lg bg-gray-50 px-3 py-2 text-center">
-                    <p className="text-xs text-gray-500">Cantidad mínima</p>
-                    <p className="text-lg font-bold text-gray-700">
-                      {alerta.producto.minimo_existencia}
-                    </p>
-                  </div>
-                </div>
-              </div>
+            <div key={alerta.id} className="px-6 py-4 bg-white text-black text-sm space-y-1">
+              <div><span className="font-semibold text-black">Nombre:</span> <span className="text-black">{alerta.producto.nombre}</span></div>
+              <div><span className="font-semibold text-black">Código:</span> <span className="text-black">{alerta.producto.codigo}</span></div>
+              <div><span className="font-semibold text-black">Existencia actual:</span> <span className="text-black">{alerta.producto.existencia}</span></div>
+              <div><span className="font-semibold text-black">Cantidad mínima:</span> <span className="text-black">{alerta.producto.minimo_existencia}</span></div>
             </div>
           ))}
         </div>
