@@ -203,7 +203,7 @@ function LayoutAppInner() {
                          text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors"
             >
               <LogOut className="h-4 w-4" />
-              <span>Salir</span>
+              <span>Cerrar Sesión</span>
             </button>
 
             {/* Cerrar sesión — móvil (ícono solo) */}

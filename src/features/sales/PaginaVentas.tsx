@@ -463,15 +463,12 @@ export function PaginaVentas() {
         <div className="bg-primary-600 px-6 py-5 text-center">
           <h1 className="text-base font-bold uppercase tracking-widest text-white">
             Registro de venta
-
-            {/* id de venta
-            {ventaActual?.folio && (
-              <span className="ml-3 font-mono text-xs font-normal text-primary-200 normal-case tracking-normal">
-                {ventaActual.folio}
-              </span>
-            )}
-              */}
           </h1>
+          {ventaActual?.folio && (
+            <p className="mt-1 font-mono text-xs text-primary-200 tracking-normal">
+              {ventaActual.folio}
+            </p>
+          )}
         </div>
 
         {/* ── Sección superior: buscador + lista compacta de resultados ── */}
@@ -647,10 +644,26 @@ export function PaginaVentas() {
           </table>
         </div>
 
-        {/* ── Pie: fecha, total y botones ── */}
+        {/* ── Pie: fecha, cajero, hora y botones ── */}
         <div className="border-t border-gray-200 px-5 py-4 space-y-3">
-          {/* Fecha */}
-          <p className="text-xs text-gray-400 capitalize">{fechaHoy}</p>
+          {/* Metadatos de la venta */}
+          <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-1">
+            <p className="text-xs text-gray-400 capitalize">{fechaHoy}</p>
+            <div className="flex items-center gap-4 text-xs text-gray-400">
+              {perfil?.nombre && (
+                <span>
+                  <span className="font-semibold text-gray-500">Cajero:</span>{' '}
+                  {perfil.nombre}
+                </span>
+              )}
+              {ventaActual?.hora_inicio && (
+                <span>
+                  <span className="font-semibold text-gray-500">Hora inicio:</span>{' '}
+                  {ventaActual.hora_inicio.slice(0, 5)}
+                </span>
+              )}
+            </div>
+          </div>
 
           {/* Total */}
           <div className="flex items-center justify-between">

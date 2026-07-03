@@ -346,7 +346,7 @@ function ModalEliminarProducto({ producto, cargando, onConfirmar, onCancelar }: 
           <p className="mb-4 text-sm text-gray-500">¿Confirmas que deseas eliminar este producto?</p>
           <ul className="rounded-xl border border-gray-100 bg-gray-50 divide-y divide-gray-100 text-sm overflow-hidden">
             <li className="flex justify-between px-4 py-2.5">
-              <span className="text-gray-500">Nombre</span>
+              <span className="text-gray-500">descripción</span>
               <span className="font-semibold text-gray-800">{producto.nombre}</span>
             </li>
             <li className="flex justify-between px-4 py-2.5">
@@ -781,7 +781,7 @@ export function PaginaProductos() {
                       <tr className="bg-gray-50">
                         {[
                           'Código de identificación',
-                          'Nombre',
+                          'Descripción',
                           'Costo',
                           'Precio',
                           'Existencia',
