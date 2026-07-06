@@ -34,7 +34,7 @@ function ModalAlertaInventario({ alertas, onCerrar }: PropiedadesModalAlerta) {
           <div className="flex items-center justify-center gap-2">
             <AlertTriangle className="h-5 w-5 text-white" aria-hidden="true" />
             <h2 className="text-base font-bold uppercase tracking-widest text-white">
-              Alerta de inventario
+              Alertas de inventario
             </h2>
           </div>
         </div>

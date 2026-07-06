@@ -388,7 +388,7 @@ function ModalAlertasStock({ alertas, cargando, onCerrar }: PropiedadesModalAler
           <div className="flex items-center gap-2">
             <Bell className="h-4 w-4 text-white" aria-hidden="true" />
             <h2 className="text-sm font-bold uppercase tracking-widest text-white">
-              Alerta de inventario
+              Alertas de inventario
             </h2>
           </div>
           <button
