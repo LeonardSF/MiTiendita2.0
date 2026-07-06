@@ -60,7 +60,14 @@ export function useProductos(terminoBusqueda = '') {
       )
     }
 
+    const startTime = Date.now()
     const { data, error } = await consulta
+    const duration = Date.now() - startTime
+    const minDelay = 2000 // Asegura que el indicador de carga sea visible (CP-170)
+
+    if (duration < minDelay) {
+      await new Promise((resolve) => setTimeout(resolve, minDelay - duration))
+    }
 
     if (error) {
       setEstado({ productos: [], cargando: false, error: error.message })

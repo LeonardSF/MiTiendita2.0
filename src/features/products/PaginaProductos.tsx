@@ -8,7 +8,7 @@
 // =============================================================================
 
 import { useState, useEffect, useCallback } from 'react'
-import { Search, Bell, X, Pencil, Package } from 'lucide-react'
+import { Search, Bell, X, Pencil, Package, CheckCircle2 } from 'lucide-react'
 import { useProductos, type EntradaProducto } from '@/shared/hooks/useProductos'
 import { useAuth } from '@/features/auth/ContextoAuth'
 import { useFooter } from '@/shared/hooks/useFooter'
@@ -369,6 +369,104 @@ function ModalEliminarProducto({ producto, cargando, onConfirmar, onCancelar }: 
 }
 
 // =============================================================================
+// Subcomponente: Modal de confirmación antes de guardar/editar producto (F.5, SRS)
+// =============================================================================
+interface PropiedadesModalConfirmarGuardar {
+  accion: 'registrar' | 'modificar'
+  datos: FormProducto
+  cargando: boolean
+  onConfirmar: () => void
+  onCancelar: () => void
+}
+
+function ModalConfirmarGuardar({ accion, datos, cargando, onConfirmar, onCancelar }: PropiedadesModalConfirmarGuardar) {
+  const esReg = accion === 'registrar'
+  const precio = calcularPrecioVenta(parseFloat(datos.costo || '0'), parseFloat(datos.pct_ganancia || '0'))
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={onCancelar}>
+      <div className="w-full max-w-md rounded-2xl bg-white overflow-hidden shadow-2xl"
+           onClick={(e) => e.stopPropagation()}>
+        
+        {/* Encabezado */}
+        <div className="flex items-center justify-between bg-primary-600 px-6 py-4">
+          <h2 className="text-sm font-bold uppercase tracking-widest text-white">
+            {esReg ? 'Confirmar Registro' : 'Confirmar Modificación'}
+          </h2>
+          <button
+            onClick={onCancelar}
+            disabled={cargando}
+            aria-label="Cerrar confirmación"
+            className="rounded-lg p-1 text-white/70 hover:text-white hover:bg-primary-700 transition-colors"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* Cuerpo */}
+        <div className="p-6 space-y-4 text-sm text-gray-600">
+          <p className="font-medium text-gray-800">
+            {esReg 
+              ? '¿Estás seguro de que deseas registrar este nuevo producto con los siguientes datos?' 
+              : '¿Estás seguro de que deseas guardar los cambios para este producto?'}
+          </p>
+
+          <ul className="rounded-xl border border-gray-100 bg-gray-50 divide-y divide-gray-100 overflow-hidden">
+            <li className="flex justify-between px-4 py-2.5">
+              <span className="text-gray-500">Nombre</span>
+              <span className="font-semibold text-gray-800">{datos.nombre}</span>
+            </li>
+            {datos.descripcion && (
+              <li className="flex justify-between px-4 py-2.5">
+                <span className="text-gray-500">Descripción</span>
+                <span className="font-semibold text-gray-800 max-w-[200px] truncate">{datos.descripcion}</span>
+              </li>
+            )}
+            <li className="flex justify-between px-4 py-2.5">
+              <span className="text-gray-500">Costo</span>
+              <span className="font-semibold text-gray-800">{formatearMoneda(parseFloat(datos.costo || '0'))}</span>
+            </li>
+            <li className="flex justify-between px-4 py-2.5">
+              <span className="text-gray-500">Ganancia (%)</span>
+              <span className="font-semibold text-gray-800">{datos.pct_ganancia}%</span>
+            </li>
+            <li className="flex justify-between px-4 py-2.5">
+              <span className="text-gray-500">Precio de venta</span>
+              <span className="font-semibold text-primary-700">{formatearMoneda(precio)}</span>
+            </li>
+            <li className="flex justify-between px-4 py-2.5">
+              <span className="text-gray-500">Existencia</span>
+              <span className="font-semibold text-gray-800">{datos.existencia} unidades</span>
+            </li>
+            <li className="flex justify-between px-4 py-2.5">
+              <span className="text-gray-500">Mínimo de existencia</span>
+              <span className="font-semibold text-gray-800">{datos.minimo_existencia} unidades</span>
+            </li>
+          </ul>
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-end gap-2 border-t border-gray-100 px-6 py-4 bg-gray-50">
+          <Boton
+            variante="secundario"
+            onClick={onCancelar}
+            disabled={cargando}
+          >
+            Cancelar
+          </Boton>
+          <Boton
+            variante="primario"
+            cargando={cargando}
+            onClick={onConfirmar}
+          >
+            Confirmar
+          </Boton>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// =============================================================================
 // Subcomponente: Modal de alertas de inventario (F.14)
 // =============================================================================
 interface PropiedadesModalAlertas {
@@ -465,6 +563,15 @@ export function PaginaProductos() {
   const [productoSeleccionado, setProductoSeleccionado] = useState<Producto | null>(null)
   const [errorOp, setErrorOp]                   = useState<string | null>(null)
   const [opCargando, setOpCargando]             = useState(false)
+  const [confirmacion, setConfirmacion]         = useState<string | null>(null)
+  const [datosPendientesCrear, setDatosPendientesCrear]   = useState<FormProducto | null>(null)
+  const [datosPendientesEditar, setDatosPendientesEditar] = useState<FormProducto | null>(null)
+
+  function mostrarConfirmacion(mensaje: string) {
+    setConfirmacion(mensaje)
+    const t = setTimeout(() => setConfirmacion(null), 3000)
+    return () => clearTimeout(t)
+  }
 
   // Buscador del catálogo
   const [busqueda, setBusqueda]               = useState('')
@@ -539,38 +646,61 @@ export function PaginaProductos() {
   }
 
   // ── CRUD handlers ────────────────────────────────────────────────────────
-  async function manejarCrear(datos: FormProducto) {
+  function manejarCrear(datos: FormProducto) {
+    setErrorOp(null)
+    setDatosPendientesCrear(datos)
+  }
+
+  function manejarEditar(datos: FormProducto) {
+    setErrorOp(null)
+    setDatosPendientesEditar(datos)
+  }
+
+  async function ejecutarCrear() {
+    if (!datosPendientesCrear) return
     setOpCargando(true); setErrorOp(null)
     const entrada: EntradaProducto = {
-      nombre:            datos.nombre,
-      descripcion:       datos.descripcion || undefined,
-      costo:             parseFloat(datos.costo),
-      pct_ganancia:      parseFloat(datos.pct_ganancia),
-      existencia:        parseInt(datos.existencia, 10),
-      minimo_existencia: parseInt(datos.minimo_existencia, 10),
+      nombre:            datosPendientesCrear.nombre,
+      descripcion:       datosPendientesCrear.descripcion || undefined,
+      costo:             parseFloat(datosPendientesCrear.costo),
+      pct_ganancia:      parseFloat(datosPendientesCrear.pct_ganancia),
+      existencia:        parseInt(datosPendientesCrear.existencia, 10),
+      minimo_existencia: parseInt(datosPendientesCrear.minimo_existencia, 10),
       creado_por:        perfil?.id,
     }
     const res = await crearProducto(entrada)
     setOpCargando(false)
-    if (!res.ok) { setErrorOp(res.error ?? 'Error al guardar.'); return }
+    if (!res.ok) {
+      setErrorOp(res.error ?? 'Error al guardar.')
+      setDatosPendientesCrear(null)
+      return
+    }
+    mostrarConfirmacion('Producto registrado correctamente.')
+    setDatosPendientesCrear(null)
     cambiarTab('catalogo')
     await cargarAlertas()
   }
 
-  async function manejarEditar(datos: FormProducto) {
-    if (!productoEditar) return
+  async function ejecutarEditar() {
+    if (!productoEditar || !datosPendientesEditar) return
     setOpCargando(true); setErrorOp(null)
     const res = await editarProducto(productoEditar.id, {
-      nombre:            datos.nombre,
-      descripcion:       datos.descripcion || undefined,
-      costo:             parseFloat(datos.costo),
-      pct_ganancia:      parseFloat(datos.pct_ganancia),
-      existencia:        parseInt(datos.existencia, 10),
-      minimo_existencia: parseInt(datos.minimo_existencia, 10),
+      nombre:            datosPendientesEditar.nombre,
+      descripcion:       datosPendientesEditar.descripcion || undefined,
+      costo:             parseFloat(datosPendientesEditar.costo),
+      pct_ganancia:      parseFloat(datosPendientesEditar.pct_ganancia),
+      existencia:        parseInt(datosPendientesEditar.existencia, 10),
+      minimo_existencia: parseInt(datosPendientesEditar.minimo_existencia, 10),
     })
     setOpCargando(false)
-    if (!res.ok) { setErrorOp(res.error ?? 'Error al actualizar.'); return }
+    if (!res.ok) {
+      setErrorOp(res.error ?? 'Error al actualizar.')
+      setDatosPendientesEditar(null)
+      return
+    }
+    mostrarConfirmacion('Producto modificado correctamente.')
     setProductoEditar(null)
+    setDatosPendientesEditar(null)
     cambiarTab('catalogo')
     await cargarAlertas()
   }
@@ -581,6 +711,7 @@ export function PaginaProductos() {
     const res = await eliminarProducto(productoEliminar.id)
     setOpCargando(false)
     if (!res.ok) { setErrorOp(res.error ?? 'Error al eliminar.'); return }
+    mostrarConfirmacion('Producto eliminado correctamente.')
     setProductoEliminar(null)
     setProductoSeleccionado(null)
   }
@@ -624,6 +755,25 @@ export function PaginaProductos() {
         onCancelar={() => { setProductoEliminar(null); setErrorOp(null) }}
       />
 
+      {datosPendientesCrear && (
+        <ModalConfirmarGuardar
+          accion="registrar"
+          datos={datosPendientesCrear}
+          cargando={opCargando}
+          onConfirmar={ejecutarCrear}
+          onCancelar={() => setDatosPendientesCrear(null)}
+        />
+      )}
+      {datosPendientesEditar && (
+        <ModalConfirmarGuardar
+          accion="modificar"
+          datos={datosPendientesEditar}
+          cargando={opCargando}
+          onConfirmar={ejecutarEditar}
+          onCancelar={() => setDatosPendientesEditar(null)}
+        />
+      )}
+
       {/* ── Tarjeta principal ── */}
       <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-sm">
 
@@ -659,6 +809,12 @@ export function PaginaProductos() {
 
         {/* ── Contenido de la tab activa ── */}
         <div className="p-6">
+          {confirmacion && (
+            <div className="mb-4 flex items-center gap-3 rounded-xl border border-green-200 bg-green-50 px-5 py-4 text-sm text-green-700 shadow-sm">
+              <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0" />
+              <span className="font-semibold">{confirmacion}</span>
+            </div>
+          )}
 
           {/* TAB: CATÁLOGO */}
           {tabActiva === 'catalogo' && (
