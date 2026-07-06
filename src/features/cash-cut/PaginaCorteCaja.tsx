@@ -69,10 +69,10 @@ function fechaHoyLegible(): string {
 interface PropiedadesModalConfirmar {
   tipo: TipoCorte; resultado: ResultadoCorte
   horaInicio: string; horaFin: string
-  cargando: boolean; onConfirmar: () => void; onCancelar: () => void
+  cargando: boolean; corteExistente: boolean; onConfirmar: () => void; onCancelar: () => void
 }
 
-function ModalConfirmarCorte({ tipo, resultado, horaInicio, horaFin, cargando, onConfirmar, onCancelar }: PropiedadesModalConfirmar) {
+function ModalConfirmarCorte({ tipo, resultado, horaInicio, horaFin, cargando, corteExistente, onConfirmar, onCancelar }: PropiedadesModalConfirmar) {
   const { perfil } = useAuth()
   const esDia = tipo === 'dia'
   return (
@@ -85,6 +85,15 @@ function ModalConfirmarCorte({ tipo, resultado, horaInicio, horaFin, cargando, o
         </div>
         <div className="px-6 pt-5 pb-2 space-y-3">
           <p className="text-sm text-gray-500 text-center">¿Confirmas guardar este corte? Esta acción no se puede deshacer.</p>
+          {corteExistente && (
+            <div className="flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
+              <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-amber-600" />
+              <div>
+                <p className="font-semibold">Corte ya existente</p>
+                <p className="mt-0.5">Ya se ha registrado un Corte del Día para la fecha de hoy. Si confirmas, se generará un registro duplicado.</p>
+              </div>
+            </div>
+          )}
           {esDia ? (
             <ul className="rounded-xl border border-gray-100 bg-gray-50 divide-y divide-gray-100 overflow-hidden text-sm">
               <li className="flex justify-between px-4 py-2.5">
@@ -110,6 +119,10 @@ function ModalConfirmarCorte({ tipo, resultado, horaInicio, horaFin, cargando, o
             </ul>
           ) : (
             <ul className="rounded-xl border border-gray-100 bg-gray-50 divide-y divide-gray-100 overflow-hidden text-sm">
+              <li className="flex justify-between px-4 py-2.5">
+                <span className="text-gray-500">Usuario responsable</span>
+                <span className="font-semibold text-gray-800">{perfil?.nombre ?? '—'}</span>
+              </li>
               <li className="flex justify-between px-4 py-2.5">
                 <span className="text-gray-500">Correo</span>
                 <span className="font-semibold text-gray-800">{perfil?.email ?? '—'}</span>
@@ -164,6 +177,37 @@ export function PaginaCorteCaja() {
   })
   const [modalConfirmar, setModalConfirmar] = useState(false)
   const [guardando, setGuardando] = useState(false)
+  const [verificandoCorte, setVerificandoCorte] = useState(false)
+  const [corteExistente, setCorteExistente] = useState(false)
+
+  async function abrirConfirmacionCorte() {
+    if (modoActivo === 'dia') {
+      setVerificandoCorte(true)
+      try {
+        const { data, error } = await supabase
+          .from('cortes_caja')
+          .select('id')
+          .eq('tipo', 'dia')
+          .eq('fecha', fechaHoy)
+          .limit(1)
+        
+        if (error) {
+          console.error('Error al verificar corte existente:', error)
+          setCorteExistente(false)
+        } else {
+          setCorteExistente(data && data.length > 0)
+        }
+      } catch (err) {
+        console.error(err)
+        setCorteExistente(false)
+      } finally {
+        setVerificandoCorte(false)
+      }
+    } else {
+      setCorteExistente(false)
+    }
+    setModalConfirmar(true)
+  }
 
   // ── Calcular corte ────────────────────────────────────────────────────────
   const calcularCorte = useCallback(async (tipo: TipoCorte) => {
@@ -272,6 +316,7 @@ export function PaginaCorteCaja() {
       {modalConfirmar && calculado && (
         <ModalConfirmarCorte tipo={modoActivo} resultado={calculado}
           horaInicio={horaInicio} horaFin={horaFin} cargando={guardando}
+          corteExistente={corteExistente}
           onConfirmar={guardarCorte} onCancelar={() => setModalConfirmar(false)} />
       )}
 
@@ -406,6 +451,10 @@ export function PaginaCorteCaja() {
                 ) : (
                   <ul className="divide-y divide-gray-100 text-sm">
                     <li className="flex justify-between px-5 py-3">
+                      <span className="text-gray-500">Usuario responsable</span>
+                      <span className="font-semibold text-gray-800">{perfil?.nombre ?? '—'}</span>
+                    </li>
+                    <li className="flex justify-between px-5 py-3">
                       <span className="text-gray-500">Correo</span>
                       <span className="font-semibold text-gray-800">{perfil?.email ?? '—'}</span>
                     </li>
@@ -476,6 +525,10 @@ export function PaginaCorteCaja() {
                     <div className="flex justify-center">
                       <div className="w-full max-w-md rounded-2xl border border-primary-200 bg-primary-50/30 p-6 shadow-sm">
                         <ul className="space-y-4">
+                          <li className="flex justify-between items-center pb-2.5 border-b border-primary-100/40">
+                            <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">Usuario responsable</span>
+                            <span className="text-sm font-semibold text-gray-800">{perfil?.nombre ?? '—'}</span>
+                          </li>
                           <li className="flex justify-between items-center pb-2.5 border-b border-primary-100/40">
                             <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">Correo</span>
                             <span className="text-sm font-semibold text-gray-800">{perfil?.email ?? '—'}</span>
@@ -575,8 +628,13 @@ export function PaginaCorteCaja() {
 
               {/* Acciones */}
               <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
-                <Boton variante="primario" className="w-full sm:w-auto"
-                  disabled={sinVentas} onClick={() => setModalConfirmar(true)}>
+                <Boton
+                  variante="primario"
+                  className="w-full sm:w-auto"
+                  disabled={sinVentas}
+                  cargando={verificandoCorte}
+                  onClick={abrirConfirmacionCorte}
+                >
                   Guardar corte
                 </Boton>
                 <Boton variante="secundario" className="w-full sm:w-auto"
