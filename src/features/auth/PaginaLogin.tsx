@@ -13,7 +13,7 @@
 // =============================================================================
 
 import { useState, useRef, useEffect } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/shared/lib/clienteSupabase'
 import { Modal } from '@/shared/components/Modal'
 import { Eye, EyeOff } from 'lucide-react'
@@ -31,12 +31,9 @@ const SEGUNDOS_BLOQUEO = 30  // 30 segundos
 
 export function PaginaLogin() {
   const navegar = useNavigate()
-  const ubicacion = useLocation()
 
-  // Ruta de origen para regresar después del login, por defecto va a ventas
-
-  const destino = (ubicacion.state as { desde?: { pathname: string } })
-    ?.desde?.pathname ?? '/ventas'
+  // Siempre dirigir a "Ventas" al iniciar sesión (CP-143)
+  const destino = '/ventas'
 
   // ── Campos del formulario ──────────────────────────────────────────────────
   const [correo, setCorreo] = useState('')
