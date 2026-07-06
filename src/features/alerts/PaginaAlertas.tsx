@@ -102,7 +102,7 @@ export function PaginaAlertas() {
     ])
 
     const activas = ((pendientes as AlertaConProducto[]) ?? []).filter(
-      (a) => a.producto.existencia <= a.producto.minimo_existencia,
+      (a) => a.producto.minimo_existencia > 0 && a.producto.existencia <= a.producto.minimo_existencia,
     )
 
     setAlertasPendientes(activas)

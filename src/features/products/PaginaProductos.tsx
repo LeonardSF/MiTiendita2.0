@@ -520,10 +520,8 @@ export function PaginaProductos() {
       .order('fecha_generada', { ascending: false })
     setAlertasCargando(false)
 
-    // Filtro defensivo: descartar alertas cuyo producto ya superó el mínimo
-    // (por si el trigger de resolución no se ejecutó aún en BD)
     const activas = ((data as AlertaConProducto[]) ?? []).filter(
-      (a) => a.producto.existencia <= a.producto.minimo_existencia,
+      (a) => a.producto.minimo_existencia > 0 && a.producto.existencia <= a.producto.minimo_existencia,
     )
     setAlertas(activas)
     if (activas.length > 0) {
@@ -824,50 +822,52 @@ export function PaginaProductos() {
               {/* Pie: contador + botones Alertas / Eliminar */}
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between pt-1">
                 <span className="text-xs text-gray-400">{productos.length} producto(s)</span>
-                {esAdmin && (
-                  <div className="flex items-center gap-2">
-                    <Boton
-                      variante="peligro"
-                      tamano="sm"
-                      icono={<Bell className="h-3.5 w-3.5" />}
-                      onClick={async () => {
-                        setModalAlertasAbierto(true)
-                        await cargarAlertas()
-                      }}
-                    >
-                      Alertas
-                    </Boton>
-                    {/* Eliminar solo en escritorio — acción destructiva no táctil */}
-                    <Boton
-                      variante="secundario"
-                      tamano="sm"
-                      className="hidden md:inline-flex"
-                      disabled={!productoSeleccionado}
-                      onClick={() => {
-                        if (productoSeleccionado) {
-                          setProductoEliminar(productoSeleccionado)
-                          setErrorOp(null)
-                        }
-                      }}
-                    >
-                      Eliminar
-                    </Boton>
-                    {/* Eliminar en móvil — solo aparece cuando hay selección */}
-                    {productoSeleccionado && (
+                <div className="flex items-center gap-2">
+                  <Boton
+                    variante="peligro"
+                    tamano="sm"
+                    icono={<Bell className="h-3.5 w-3.5" />}
+                    onClick={async () => {
+                      setModalAlertasAbierto(true)
+                      await cargarAlertas()
+                    }}
+                  >
+                    Alertas
+                  </Boton>
+                  {esAdmin && (
+                    <>
+                      {/* Eliminar solo en escritorio — acción destructiva no táctil */}
                       <Boton
                         variante="secundario"
                         tamano="sm"
-                        className="md:hidden"
+                        className="hidden md:inline-flex"
+                        disabled={!productoSeleccionado}
                         onClick={() => {
-                          setProductoEliminar(productoSeleccionado)
-                          setErrorOp(null)
+                          if (productoSeleccionado) {
+                            setProductoEliminar(productoSeleccionado)
+                            setErrorOp(null)
+                          }
                         }}
                       >
                         Eliminar
                       </Boton>
-                    )}
-                  </div>
-                )}
+                      {/* Eliminar en móvil — solo aparece cuando hay selección */}
+                      {productoSeleccionado && (
+                        <Boton
+                          variante="secundario"
+                          tamano="sm"
+                          className="md:hidden"
+                          onClick={() => {
+                            setProductoEliminar(productoSeleccionado)
+                            setErrorOp(null)
+                          }}
+                        >
+                          Eliminar
+                        </Boton>
+                      )}
+                    </>
+                  )}
+                </div>
               </div>
 
               {/* Error de operación en catálogo */}

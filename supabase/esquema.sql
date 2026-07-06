@@ -497,8 +497,8 @@ CREATE TRIGGER trg_cobro_1_validar
 CREATE OR REPLACE FUNCTION fn_generar_alerta_stock()
 RETURNS TRIGGER AS $$
 BEGIN
-  -- Actuar siempre que el stock actual quede en o bajo el mínimo
-  IF NEW.existencia <= NEW.minimo_existencia THEN
+  -- Actuar siempre que el stock actual quede en o bajo el mínimo, si se configuró un mínimo mayor a 0
+  IF NEW.minimo_existencia > 0 AND NEW.existencia <= NEW.minimo_existencia THEN
     -- Crear alerta solo si no hay una activa (no resuelta) para este producto
     IF NOT EXISTS (
       SELECT 1 FROM alertas
@@ -847,9 +847,9 @@ CREATE POLICY "cortes_insert" ON cortes_caja FOR INSERT
   WITH CHECK (rol_actual() IN ('admin', 'cajero'));
 
 -- ── alertas ───────────────────────────────────────────────────────────────────
--- Solo admin puede ver alertas; se resuelven automáticamente por trigger
+-- Admin y cajero pueden ver alertas (F.14); se resuelven automáticamente por trigger
 CREATE POLICY "alertas_select" ON alertas FOR SELECT
-  USING (rol_actual() = 'admin');
+  USING (rol_actual() IN ('admin', 'cajero'));
 
 
 -- =============================================================================
