@@ -6,7 +6,7 @@
 // =============================================================================
 
 import { useState, useEffect, useRef } from 'react'
-import { Search, Plus, Minus, X } from 'lucide-react'
+import { Search, Plus, Minus, X, Bell } from 'lucide-react'
 import { useVentas } from '@/shared/hooks/useVentas'
 import { useAuth } from '@/features/auth/ContextoAuth'
 import { useFooter } from '@/shared/hooks/useFooter'
@@ -35,6 +35,68 @@ function ModalAlertaAgotado({ mensaje, onCerrar }: { mensaje: string; onCerrar: 
           <span className="text-5xl leading-none">⚠️</span>
           <p className="text-sm text-gray-700 text-center leading-relaxed">{mensaje}</p>
           <Boton variante="peligro" className="w-full" onClick={onCerrar}>Aceptar</Boton>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// =============================================================================
+// Modal de alerta — producto bajo mínimo de inventario (F.14)
+// =============================================================================
+function ModalAlertaStockBajo({ producto, onCerrar }: { producto: Producto; onCerrar: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={onCerrar}>
+      <div className="w-full max-w-sm rounded-2xl bg-white overflow-hidden shadow-2xl"
+           onClick={(e) => e.stopPropagation()}>
+        {/* Encabezado */}
+        <div className="flex items-center justify-between bg-red-600 px-6 py-4">
+          <div className="flex items-center gap-2">
+            <Bell className="h-4 w-4 text-white" aria-hidden="true" />
+            <h2 className="text-sm font-bold uppercase tracking-widest text-white">
+              Alertas de inventario
+            </h2>
+          </div>
+          <button
+            onClick={onCerrar}
+            aria-label="Cerrar alerta"
+            className="rounded-lg p-1 text-white/70 hover:text-white hover:bg-red-700 transition-colors"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* Cuerpo */}
+        <div className="px-6 py-4 bg-white text-black text-sm space-y-3">
+          <p className="font-semibold text-gray-800">El producto tiene inventario bajo o mínimo:</p>
+          <div className="space-y-1">
+            <div>
+              <span className="font-semibold text-black">Nombre:</span>{' '}
+              <span className="text-black">{producto.nombre}</span>
+            </div>
+            <div>
+              <span className="font-semibold text-black">Código:</span>{' '}
+              <span className="text-black">{producto.codigo}</span>
+            </div>
+            <div>
+              <span className="font-semibold text-black">Existencia actual:</span>{' '}
+              <span className="text-black">{producto.existencia}</span>
+            </div>
+            <div>
+              <span className="font-semibold text-black">Cantidad mínima:</span>{' '}
+              <span className="text-black">{producto.minimo_existencia}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-end border-t border-gray-100 px-6 py-4 bg-gray-50">
+          <button
+            onClick={onCerrar}
+            className="inline-flex items-center justify-center rounded-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-500 px-4 py-2 text-sm"
+          >
+            Aceptar
+          </button>
         </div>
       </div>
     </div>
@@ -278,6 +340,9 @@ export function PaginaVentas() {
   // Alerta producto sin existencia
   const [alertaAgotado, setAlertaAgotado] = useState<string | null>(null)
 
+  // Alerta producto bajo mínimo (F.14)
+  const [productoBajoMinimo, setProductoBajoMinimo] = useState<Producto | null>(null)
+
   // Resumen post-cobro
   const [resumenVenta, setResumenVenta] = useState<ResumenVenta | null>(null)
 
@@ -357,6 +422,11 @@ export function PaginaVentas() {
     if (!agregado.ok) {
       inputRef.current?.focus()
       return
+    }
+
+    // Alerta de inventario mínimo (F.14 / CP-130) - solo al cajero
+    if (perfil?.rol === 'cajero' && p.minimo_existencia > 0 && p.existencia <= p.minimo_existencia) {
+      setProductoBajoMinimo(p)
     }
 
     // Guardar en el mapa para poder mostrar el código en la tabla luego
@@ -440,11 +510,18 @@ export function PaginaVentas() {
         />
       )}
 
-      {/* Modal producto agotado */}
       {alertaAgotado && (
         <ModalAlertaAgotado
           mensaje={alertaAgotado}
           onCerrar={() => setAlertaAgotado(null)}
+        />
+      )}
+
+      {/* Modal producto bajo mínimo */}
+      {productoBajoMinimo && (
+        <ModalAlertaStockBajo
+          producto={productoBajoMinimo}
+          onCerrar={() => setProductoBajoMinimo(null)}
         />
       )}
 
